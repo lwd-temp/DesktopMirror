@@ -1,0 +1,2 @@
+run-autoexit.bat
+pause
