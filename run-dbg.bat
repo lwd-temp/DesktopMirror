@@ -1,2 +1,2 @@
-run-autoexit.bat
+run-console.bat
 pause
