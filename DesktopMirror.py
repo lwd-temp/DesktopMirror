@@ -25,19 +25,23 @@ try:
     drives = drives.split('\000')[:-1]
     # 创建一个空列表，用于存放结果
     result = []
+    # 标记文件名
+    flag_name = "sunset_destination.txt"
     # 遍历每个驱动器
     for drive in drives:
         # 拼接文件路径
-        file_path = os.path.join(drive, 'sunset_destination.txt')
+        file_path = os.path.join(drive, flag_name)
         # 检查文件是否存在
         if os.path.exists(file_path):
             # 如果存在
+            pending_logs.append(
+                f'Found {file_path} in {drive}, {drive} will be the destination.')
             base_dir = os.path.dirname(file_path)
             drive_found = True
             break
 
     if not drive_found:
-        raise Exception("Drive not found.")
+        raise Exception(f"Drive not found, no flag file {flag_name}.")
 except Exception:
     import traceback
     pending_logs.append(traceback.format_exc())
