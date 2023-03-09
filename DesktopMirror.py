@@ -67,5 +67,5 @@ try:
     logger.info("Done.")
 except Exception as e:
     import traceback
-    logging.error(traceback.format_exc())
+    logger.error(traceback.format_exc())
     sys.exit(1)
