@@ -1,5 +1,6 @@
 import logging
 import os
+import pathlib
 import sys
 import time
 from logging.handlers import RotatingFileHandler
@@ -7,8 +8,55 @@ from logging.handlers import RotatingFileHandler
 import dirsync
 import pygit2
 
+# Failsafe
+base_dir = os.path.dirname(os.path.abspath(__file__))
+# 等待录入的logs
+pending_logs = ["Hello."]
+
+try:
+    # 仅Windows
+    if os.name != "nt":
+        raise OSError("Windows Only Feature.")
+
+    drive_found = False
+    # 获取所有可用的驱动器
+    drives = pathlib.Path().cwd().glob("**/*:/")
+
+    # 遍历每个驱动器
+    for drive in drives:
+        # 获取驱动器的路径
+        drive_path = str(drive)
+        # 尝试打开驱动器
+        try:
+            os.startfile(drive_path)
+            # 在根目录下查找文件名为sunset_destination.txt的文件
+            files = pathlib.Path(drive_path).glob("sunset_destination.txt")
+            # 如果找到了，打印驱动器的路径并退出循环
+            for file in files:
+                pending_logs.append(
+                    f"Found {file} in {drive_path}, it will be the destination.")
+                base_dir = os.path.dirname(drive_path)
+                drive_found = True
+                break
+        # 如果打开失败，跳过该驱动器
+        except:
+            continue
+
+    if not drive_found:
+        raise Exception("Drive not found.")
+except Exception:
+    import traceback
+    pending_logs.append(traceback.format_exc)
+    pending_logs.append("Failed to find the destination, use script location.")
+    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+        pending_logs.append('running in a PyInstaller bundle')
+        base_dir = os.path.dirname(sys.executable)
+    else:
+        pending_logs.append('running in a normal Python process')
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+
 # 配置logging
-log_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sync.log")
+log_file = os.path.join(base_dir, "sync.log")
 log_formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
 log_handler = RotatingFileHandler(log_file, maxBytes=1048576, backupCount=3)
 log_handler.setFormatter(log_formatter)
@@ -21,13 +69,15 @@ logger.addHandler(log_handler)
 logger.addHandler(log_console_handler)
 logger.setLevel(logging.INFO)
 
+for log in pending_logs:
+    logger.info(log)
+
 try:
     # 获取当前用户桌面路径
     desktop = os.path.join(os.environ["USERPROFILE"], "Desktop")
 
     # 设置同步目录
-    sync_dir = os.path.join(os.path.dirname(
-        os.path.abspath(__file__)), "DesktopMirror")
+    sync_dir = os.path.join(base_dir, "DesktopMirror")
 
     # 记录同步目录信息
     logger.info(f"Syncing desktop folder from {desktop} to {sync_dir}...")
