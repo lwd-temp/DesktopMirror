@@ -1,0 +1,1 @@
+pyinstaller --onedir --hidden-import=_cffi_backend --name DesktopMirrorExecutable --console DesktopMirror.py
