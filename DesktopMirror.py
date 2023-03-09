@@ -46,7 +46,7 @@ try:
         raise Exception("Drive not found.")
 except Exception:
     import traceback
-    pending_logs.append(traceback.format_exc)
+    pending_logs.append(traceback.format_exc())
     pending_logs.append("Failed to find the destination, use script location.")
     if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
         pending_logs.append('running in a PyInstaller bundle')
