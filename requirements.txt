@@ -1,0 +1,3 @@
+dirsync
+pygit2
+win32api
