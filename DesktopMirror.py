@@ -1,12 +1,12 @@
 import logging
 import os
-import pathlib
 import sys
 import time
 from logging.handlers import RotatingFileHandler
 
 import dirsync
 import pygit2
+import win32api
 
 # Failsafe
 base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -16,31 +16,25 @@ pending_logs = ["Hello."]
 try:
     # 仅Windows
     if os.name != "nt":
-        raise OSError("Windows Only Feature.")
+        raise OSError("Windows only feature.")
 
     drive_found = False
-    # 获取所有可用的驱动器
-    drives = pathlib.Path().cwd().glob("**/*:/")
 
+    # 获取所有驱动器列表
+    drives = win32api.GetLogicalDriveStrings()
+    drives = drives.split('\000')[:-1]
+    # 创建一个空列表，用于存放结果
+    result = []
     # 遍历每个驱动器
     for drive in drives:
-        # 获取驱动器的路径
-        drive_path = str(drive)
-        # 尝试打开驱动器
-        try:
-            os.startfile(drive_path)
-            # 在根目录下查找文件名为sunset_destination.txt的文件
-            files = pathlib.Path(drive_path).glob("sunset_destination.txt")
-            # 如果找到了，打印驱动器的路径并退出循环
-            for file in files:
-                pending_logs.append(
-                    f"Found {file} in {drive_path}, it will be the destination.")
-                base_dir = os.path.dirname(drive_path)
-                drive_found = True
-                break
-        # 如果打开失败，跳过该驱动器
-        except:
-            continue
+        # 拼接文件路径
+        file_path = os.path.join(drive, 'sunset_destination.txt')
+        # 检查文件是否存在
+        if os.path.exists(file_path):
+            # 如果存在
+            base_dir = os.path.dirname(file_path)
+            drive_found = True
+            break
 
     if not drive_found:
         raise Exception("Drive not found.")
