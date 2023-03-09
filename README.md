@@ -14,3 +14,5 @@ Tested on Windows 11, should run correctly on Windows 7 & above.
 构建指令`pyinstaller --onedir --hidden-import=_cffi_backend --name DesktopMirrorExecutable --console DesktopMirror.py`。
 
 使用`onedir`避免低I/O硬盘自解压造成的效率问题。
+
+不能处理桌面有另一个Git仓库的情况，但在当前应用场景下不需要处理。
