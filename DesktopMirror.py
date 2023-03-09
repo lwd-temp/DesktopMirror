@@ -8,7 +8,7 @@ import dirsync
 import pygit2
 
 # 配置logging
-log_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sync.log")
+log_file = os.path.join("sync.log")
 log_formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
 log_handler = RotatingFileHandler(log_file, maxBytes=1048576, backupCount=3)
 log_handler.setFormatter(log_formatter)
@@ -26,8 +26,7 @@ try:
     desktop = os.path.join(os.environ["USERPROFILE"], "Desktop")
 
     # 设置同步目录
-    sync_dir = os.path.join(os.path.dirname(
-        os.path.abspath(__file__)), "DesktopMirror")
+    sync_dir = os.path.join("DesktopMirror")
 
     # 记录同步目录信息
     logger.info(f"Syncing desktop folder from {desktop} to {sync_dir}...")
