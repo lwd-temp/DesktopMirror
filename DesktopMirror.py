@@ -39,6 +39,7 @@ try:
 
     # 初始化Git版本库
     git_dir = os.path.join(sync_dir, ".git")
+    pygit2.option(pygit2.GIT_OPT_SET_OWNER_VALIDATION, 0)
     if not os.path.exists(git_dir):
         repo = pygit2.init_repository(sync_dir)
         logger.info(f"Initialized empty Git repository in {sync_dir}.")
