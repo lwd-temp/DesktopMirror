@@ -1,31 +1,31 @@
 @echo off
-setlocal
 
-rem 获取脚本所在目录的路径
-for %%i in ("%~dp0.") do set "script_dir=%%~fi"
+setlocal enabledelayedexpansion
 
-rem 获取当前用户桌面路径
-set "desktop_dir=%userprofile%\Desktop"
+REM 获取当前用户桌面路径
+set desktop=%userprofile%\Desktop
 
-rem 创建DesktopMirror文件夹
-set "mirror_dir=%script_dir%\DesktopMirror"
-if not exist "%mirror_dir%" mkdir "%mirror_dir%"
+REM 设置同步目录
+set sync_dir=%~dp0DesktopMirror
 
-rem 同步桌面到DesktopMirror
-xcopy /e /y "%desktop_dir%" "%mirror_dir%"
+REM 如果同步目录不存在，则创建它
+if not exist "%sync_dir%" mkdir "%sync_dir%"
 
-rem 进入DesktopMirror目录
-cd "%mirror_dir%"
+REM 切换到同步目录
+cd /d "%sync_dir%"
 
-rem 指定Git可执行文件路径
-set "git_exec_path=C:\Program Files\Git\bin\git.exe"
+REM 初始化Git版本库
+if not exist "%sync_dir%\.git" (
+    git init
+    echo Initialized empty Git repository in %sync_dir%\.git/
+)
 
-rem 初始化Git仓库
-if not exist "%mirror_dir%\.git" "%git_exec_path%" init
+REM 使用robocopy命令同步文件夹（排除.git文件夹）
+robocopy "%desktop%" "%sync_dir%" /E /ZB /PURGE /XO /FFT /R:3 /W:10 /XD .git
 
-rem 添加所有更改并提交
-"%git_exec_path%" add --all
-"%git_exec_path%" commit -m "Update desktop mirror on %date% %time%"
+REM 将更改提交到Git版本库
+git add .
+git commit -m "Update desktop files on %date% %time%"
 
-rem 返回脚本所在目录
-cd "%script_dir%"
+echo Done.
+pause
