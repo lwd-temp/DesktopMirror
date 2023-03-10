@@ -56,7 +56,7 @@ except Exception:
 # 配置logging
 log_file = os.path.join(base_dir, "sync.log")
 log_formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
-log_handler = RotatingFileHandler(log_file, maxBytes=1048576, backupCount=3)
+log_handler = RotatingFileHandler(log_file, maxBytes=1048576, backupCount=10)
 log_handler.setFormatter(log_formatter)
 log_handler.setLevel(logging.INFO)
 log_console_handler = logging.StreamHandler()
@@ -90,13 +90,27 @@ try:
     pygit2.option(pygit2.GIT_OPT_SET_OWNER_VALIDATION, 0)
     if not os.path.exists(git_dir):
         repo = pygit2.init_repository(sync_dir)
-        logger.info(f"Initialized empty Git repository in {sync_dir}.")
+
+        # 创建一个空文件作为初始提交的内容
+        open(os.path.join(sync_dir, '.gitkeep'), 'w').close()
+
+        # 添加并提交初始文件
+        index = repo.index
+        index.add_all()
+        index.write()
+        tree_oid = index.write_tree()
+        author = pygit2.Signature("Your Name", "your.email@example.com")
+        committer = author
+        commit_message = "Initial commit"
+        commit_oid = repo.create_commit(
+            "HEAD", author, committer, commit_message, tree_oid, [])
+        logger.info(f"Initial commit with id: {commit_oid}.")
     else:
         repo = pygit2.Repository(sync_dir)
 
     # 使用dirsync库同步文件夹
-    changes = dirsync.sync(desktop, sync_dir, "sync", exclude=[
-        ".git"], logger=logger, verbose=True)
+    changes = dirsync.sync(desktop, sync_dir, "sync", ignore=[
+                           ".git", '.gitkeep'], logger=logger, verbose=True, purge=True, create=True)
 
     # 如果有文件更改，则提交到Git版本库
     if changes:
@@ -107,8 +121,11 @@ try:
         author = pygit2.Signature("Your Name", "your.email@example.com")
         committer = author
         commit_message = f"Update desktop files on {time.strftime('%Y-%m-%d %H:%M:%S')}"
+        # 获取最新提交的 SHA 值
+        parent_commit = repo.head.target
+        # 创建提交对象
         commit_oid = repo.create_commit(
-            "HEAD", author, committer, commit_message, tree_oid, [])
+            "HEAD", author, committer, commit_message, tree_oid, [parent_commit])
         logger.info(f"Committed changes with id: {commit_oid}.")
     else:
         logger.info("No changes detected. Nothing to commit.")
